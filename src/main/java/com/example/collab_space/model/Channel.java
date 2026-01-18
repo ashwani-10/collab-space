@@ -18,7 +18,7 @@ public class Channel {
     @ManyToOne
     Workspace workspace;
 
-    @Column(nullable = false)
+    @Column(nullable = false,unique = true)
     String name;
 
     @Column(nullable = false)

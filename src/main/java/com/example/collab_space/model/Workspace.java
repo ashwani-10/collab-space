@@ -22,5 +22,4 @@ public class Workspace {
 
     @CreationTimestamp
     LocalDate updatedAt;
-
 }

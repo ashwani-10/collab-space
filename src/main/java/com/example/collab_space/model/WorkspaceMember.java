@@ -21,10 +21,12 @@ public class WorkspaceMember {
     @ManyToOne
     User user;
 
-
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     Role role;
+
+    @Column(nullable = false)
+    boolean isActiveInWorkspace;
 
     @CreationTimestamp
     LocalDate joinedAt;

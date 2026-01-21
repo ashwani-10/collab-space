@@ -2,6 +2,7 @@ package com.example.collab_space.service;
 
 import com.example.collab_space.model.*;
 import com.example.collab_space.repository.*;
+import com.example.collab_space.requestDto.AddChannelMemberDto;
 import com.example.collab_space.requestDto.ChannelCreationDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,12 +28,13 @@ public class ChannelService {
     @Autowired
     ChannelMemberRepo channelMemberRepo;
 
-    public void creteChannel(Long userId, ChannelCreationDto channelCreationDto) {
+    public void createChannel(Long userId, ChannelCreationDto channelCreationDto) {
         Optional<Workspace> workspace = workspaceRepo.findById(channelCreationDto.getWorkspaceId());
 
         if(workspace.isEmpty()){
             throw new RuntimeException("workspace does not exists");
         }
+
         Channel channel1 = channelRepo.findByName(channelCreationDto.getChannelName().toLowerCase());
 
         if(channel1 != null){
@@ -54,7 +56,7 @@ public class ChannelService {
         }
 
         if(!isMember){
-            throw  new RuntimeException("User is not our workspace");
+            throw  new RuntimeException("User is not in our workspace");
         }
 
         Channel channel = new Channel();
@@ -72,7 +74,6 @@ public class ChannelService {
             channelmember.setJoinedAt(LocalDate.now());
             channelMemberRepo.save(channelmember);
         }else {
-
             for (WorkspaceMember workspaceMember : list) {
                 Channelmember channelmember = new Channelmember();
                 channelmember.setUser(workspaceMember.getUser());
@@ -80,6 +81,73 @@ public class ChannelService {
                 channelmember.setJoinedAt(LocalDate.now());
                 channelMemberRepo.save(channelmember);
             }
+        }
+    }
+
+
+    public void addChannelMember(Long userId, AddChannelMemberDto channelMemberDto) {
+        Optional<Workspace> workspace = workspaceRepo.findById(channelMemberDto.getWorkspaceId());
+
+        if(workspace.isEmpty()){
+            throw new RuntimeException("workspace does not exists");
+        }
+
+        Optional<Channel> channel1 = channelRepo.findById(channelMemberDto.getChannelId());
+
+        if(channel1.isEmpty()){
+            throw new RuntimeException("Channel does not exists");
+        }
+
+        Optional<User> user = userRepository.findById(userId);
+        Optional<User> member = userRepository.findById(channelMemberDto.getMemberId());
+        if(user.isEmpty() || member.isEmpty()){
+            throw new RuntimeException("User does not exists");
+        }
+
+        List<WorkspaceMember> list = workspaceMemberRepo.findByWorkspace(workspace.get());
+        boolean isUserExists = false;
+        boolean isMemberExists = false;
+
+        for(WorkspaceMember workspaceMember : list){
+            if(isMemberExists && isUserExists){
+                break;
+            }
+            if(workspaceMember.getUser() == user.get()){
+                isUserExists = true;
+            }else if(workspaceMember.getUser() == member.get()){
+                isMemberExists = true;
+            }
+        }
+
+        if(!isMemberExists || !isUserExists){
+            throw  new RuntimeException("User is not in our workspace");
+        }
+
+        isUserExists = false;
+        isMemberExists = false;
+
+        List<Channelmember> channelmembers = channelMemberRepo.findByChannel(channel1.get());
+        for(Channelmember cm : channelmembers){
+            if(isMemberExists && isUserExists){
+                break;
+            }
+            if(cm.getUser() == user.get()){
+                isUserExists = true;
+            }else if(cm.getUser() == member.get()){
+                isMemberExists = true;
+            }
+        }
+
+        if(isMemberExists){
+            throw new RuntimeException("User already in the channel");
+        } else if (!isUserExists) {
+            throw new RuntimeException("Invalid invitation");
+        }else {
+            Channelmember channelmember = new Channelmember();
+            channelmember.setChannel(channel1.get());
+            channelmember.setUser(member.get());
+            channelmember.setJoinedAt(LocalDate.now());
+            channelMemberRepo.save(channelmember);
         }
 
     }

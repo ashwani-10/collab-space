@@ -1,5 +1,6 @@
 package com.example.collab_space.controller;
 
+import com.example.collab_space.requestDto.AddChannelMemberDto;
 import com.example.collab_space.requestDto.ChannelCreationDto;
 import com.example.collab_space.service.ChannelService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +19,21 @@ public class ChannelController {
     public ResponseEntity createChannel(@RequestBody ChannelCreationDto channelCreationDto,
                                         @PathVariable Long userId){
         try {
-            channelService.creteChannel(userId,channelCreationDto);
+            channelService.createChannel(userId,channelCreationDto);
             return new ResponseEntity("Channel created successfully",HttpStatus.CREATED);
         }catch (RuntimeException e){
             return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/add/channel/member/{userId}")
+    public ResponseEntity addChannelMember(@RequestBody AddChannelMemberDto channelMemberDto,
+                                           @PathVariable Long userId){
+        try{
+            channelService.addChannelMember(userId,channelMemberDto);
+            return new ResponseEntity("member added in channel",HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity(e.getMessage(),HttpStatus.BAD_REQUEST);
         }
     }
 

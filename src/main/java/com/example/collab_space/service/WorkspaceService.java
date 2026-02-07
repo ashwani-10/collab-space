@@ -11,12 +11,16 @@ import com.example.collab_space.repository.WorkspaceInviteRepo;
 import com.example.collab_space.repository.WorkspaceMemberRepo;
 import com.example.collab_space.repository.WorkspaceRepo;
 import com.example.collab_space.requestDto.InviteUserDto;
+import com.example.collab_space.requestDto.UserChannelReqDto;
 import com.example.collab_space.requestDto.UserRegistrationDto;
+import com.example.collab_space.responseDto.WorkspaceMemberDto;
+import com.example.collab_space.responseDto.WorkspaceResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -67,6 +71,7 @@ public class WorkspaceService {
         workspaceMember.setWorkspace(workspace);
         workspaceMember.setUser(user);
         workspaceMember.setRole(Role.Owner);
+        workspaceMember.setActiveInWorkspace(true);
         workspaceMemberRepo.save(workspaceMember);
     }
 
@@ -226,6 +231,68 @@ public class WorkspaceService {
         workspaceMember.setJoinedAt(LocalDate.now());
         workspaceMemberRepo.save(workspaceMember);
 
+    }
+
+    public List<WorkspaceResponseDto> fetchUserWorkspace(String userEmail) {
+        User user = userRepository.findByEmail(userEmail);
+
+        if(user == null){
+            throw new RuntimeException("User not found");
+        }
+
+        if(!user.isActive()){
+            throw new RuntimeException("Inactive account");
+        }
+
+        List<WorkspaceMember> list = workspaceMemberRepo.findByUser(user);
+        List<WorkspaceResponseDto> responseDtoList = new ArrayList<>();
+
+        for(WorkspaceMember workspaceMember : list){
+            if(workspaceMember.isActiveInWorkspace()){
+                WorkspaceResponseDto responseDto = new WorkspaceResponseDto();
+                responseDto.setWorkspaceId(workspaceMember.getWorkspace().getId());
+                responseDto.setWorkspaceName(workspaceMember.getWorkspace().getName());
+                responseDto.setUserRole(String.valueOf(workspaceMember.getRole()));
+                responseDtoList.add(responseDto);
+            }
+        }
+
+        return responseDtoList;
+        //workspaceID
+        //workspaceName
+        //workspaceRole
+
+        //isActiveInWorkspace
+    }
+
+    public List<WorkspaceMemberDto> fetchWorkspaceMembers(UserChannelReqDto reqDto) {
+        User user = userRepository.findByEmail(reqDto.getUserEmail());
+
+        if(user == null){
+            throw new RuntimeException("User not found");
+        }
+
+        if(!user.isActive()){
+            throw new RuntimeException("Inactive account");
+        }
+
+        Optional<Workspace> workspace = workspaceRepo.findById(reqDto.getWorkspaceId());
+
+        if(workspace.isEmpty()){
+            throw new RuntimeException("workspace does not exists");
+        }
+
+        List<WorkspaceMember> workspaceMembers = workspaceMemberRepo.findByWorkspace(workspace.get());
+        List<WorkspaceMemberDto> memberDtos = new ArrayList<>();
+
+        for(WorkspaceMember member : workspaceMembers){
+            WorkspaceMemberDto memberDto = new WorkspaceMemberDto();
+            memberDto.setUserId(member.getUser().getUserId());
+            memberDto.setUserName(member.getUser().getName());
+            memberDto.setActive(member.isActiveInWorkspace());
+            memberDtos.add(memberDto);
+        }
+        return memberDtos;
     }
 
 

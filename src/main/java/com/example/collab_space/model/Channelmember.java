@@ -22,5 +22,4 @@ public class Channelmember {
 
     @CreationTimestamp
     LocalDate joinedAt;
-
 }

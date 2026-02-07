@@ -1,13 +1,18 @@
 package com.example.collab_space.controller;
 
 import com.example.collab_space.requestDto.InviteUserDto;
+import com.example.collab_space.requestDto.UserChannelReqDto;
 import com.example.collab_space.requestDto.UserRegistrationDto;
+import com.example.collab_space.responseDto.WorkspaceMemberDto;
+import com.example.collab_space.responseDto.WorkspaceResponseDto;
 import com.example.collab_space.service.WorkspaceService;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @CrossOrigin("*")
 @RestController
@@ -68,6 +73,27 @@ public class WorkspaceController {
             return new ResponseEntity(e.getMessage(),HttpStatus.BAD_REQUEST);
         }
     }
+
+    @GetMapping("/fetch/users/workspace/{userEmail}")
+    public ResponseEntity fetchWorkspace(@PathVariable String userEmail){
+        try {
+            List<WorkspaceResponseDto> list = workspaceService.fetchUserWorkspace(userEmail);
+            return new ResponseEntity(list,HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity(e.getMessage(),HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/fetch/workspace/members")
+    public ResponseEntity fetchWorkspaceMembers(@RequestBody UserChannelReqDto reqDto){
+        try {
+            List<WorkspaceMemberDto> list = workspaceService.fetchWorkspaceMembers(reqDto);
+            return new ResponseEntity(list,HttpStatus.OK);
+        } catch (RuntimeException e) {
+            return new ResponseEntity(e.getMessage(),HttpStatus.BAD_REQUEST);
+        }
+    }
+
 
 //    [1,2,"abc"]
 }
